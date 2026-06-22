@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: dadian-server
+  profiles:
+    active: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5432/dadian?stringtype=unspecified
+    username: dadian
+    password: dadian_dev
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  jackson:
+    property-naming-strategy: LOWER_CAMEL_CASE
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: assign_uuid
+
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-stacktrace: never
+
+logging:
+  level:
+    com.dadian: DEBUG
+    org.springframework.security: INFO

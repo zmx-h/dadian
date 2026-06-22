@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/dadian?stringtype=unspecified
+    username: dadian
+    password: dadian_dev
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+dadian:
+  jwt:
+    secret: dadian-dev-secret-key-change-in-prod
+  sms:
+    provider: aliyun-stub
+    sign-name: 搭电
+
+logging:
+  level:
+    com.dadian: DEBUG
