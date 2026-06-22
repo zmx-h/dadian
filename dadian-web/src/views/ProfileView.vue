@@ -41,9 +41,9 @@ const privacySaving = ref(false)
 async function savePrivacy() {
   privacySaving.value = true
   try {
-    await api.patch('/users/me/privacy', {
-      achievement_visibility: privacyVisibility.value,
-      location_retention_days: privacyRetention.value,
+    await api.put('/users/me/privacy', {
+      achievementVisibility: privacyVisibility.value,
+      locationRetention: privacyRetention.value,
     })
     // simple inline toast
     toastMsg.value = '隐私设置已保存'

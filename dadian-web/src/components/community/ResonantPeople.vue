@@ -48,10 +48,10 @@ const emit = defineEmits<{ refresh: []; message: [id: string] }>()
           </button>
           <button
             class="p-1.5 rounded-full transition-colors"
-            :class="store.isFollowing(u.id) ? 'text-amber-400' : 'text-stone-600 hover:text-amber-400'"
-            @click="store.isFollowing(u.id) ? store.unfollow(u.id) : store.follow(u.id)"
+            :class="store.isFollowingMap[u.id] ? 'text-amber-400' : 'text-stone-600 hover:text-amber-400'"
+            @click="store.isFollowingMap[u.id] ? store.unfollow(u.id) : store.follow(u.id)"
           >
-            <component :is="store.isFollowing(u.id) ? UserMinus : UserPlus" :size="14" />
+            <component :is="store.isFollowingMap[u.id] ? UserMinus : UserPlus" :size="14" />
           </button>
         </div>
       </div>

@@ -101,19 +101,19 @@ async function handleSaveDice() {
         <div class="flex items-center justify-center gap-1 text-stone-400 text-xs mb-1">
           <MapPin :size="12" /> 出行数
         </div>
-        <div class="text-2xl font-bold text-amber-400">{{ stats?.outings ?? '--' }}</div>
+        <div class="text-2xl font-bold text-amber-400">{{ stats?.outingCount ?? '--' }}</div>
       </div>
       <div class="glass-card p-4 text-center">
         <div class="flex items-center justify-center gap-1 text-stone-400 text-xs mb-1">
           <Camera :size="12" /> 回忆录数
         </div>
-        <div class="text-2xl font-bold text-amber-400">{{ stats?.memories ?? '--' }}</div>
+        <div class="text-2xl font-bold text-amber-400">{{ stats?.memoryCount ?? '--' }}</div>
       </div>
       <div class="glass-card p-4 text-center">
         <div class="flex items-center justify-center gap-1 text-stone-400 text-xs mb-1">
           <Cpu :size="12" /> AI Token
         </div>
-        <div class="text-2xl font-bold text-amber-400">{{ stats?.aiTokens ?? '--' }}</div>
+        <div class="text-2xl font-bold text-amber-400">{{ stats?.aiTokenUsed ?? '--' }}</div>
       </div>
     </div>
 
@@ -170,9 +170,9 @@ async function handleSaveDice() {
         :key="cfg.key"
         class="glass-card p-4 space-y-2"
       >
-        <label class="text-xs font-medium text-stone-400">{{ cfg.label }}</label>
+        <label class="text-xs font-medium text-stone-400">{{ cfg.scene }} · {{ cfg.key }}</label>
         <textarea
-          v-model="cfg.content"
+          v-model="cfg.persuasionText"
           rows="3"
           class="w-full bg-stone-800 text-stone-200 text-sm rounded-lg px-3 py-2 border border-stone-700
                  focus:outline-none focus:border-amber-500/50 resize-none"

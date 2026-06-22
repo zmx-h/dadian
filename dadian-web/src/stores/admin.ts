@@ -5,9 +5,9 @@ import api from '@/api'
 // -------------------- Types --------------------
 export interface AdminStats {
   dau: number
-  outings: number
-  memories: number
-  aiTokens: number
+  outingCount: number
+  memoryCount: number
+  aiTokenUsed: number
 }
 
 export interface PendingMemory {
@@ -27,8 +27,8 @@ export interface PendingComment {
 
 export interface DiceConfig {
   key: string
-  label: string
-  content: string
+  persuasionText: string
+  scene: string
 }
 
 // -------------------- Store --------------------
@@ -46,7 +46,7 @@ export const useAdminStore = defineStore('admin', () => {
       stats.value = data.data ?? data
     } catch {
       // mock fallback
-      stats.value = { dau: 128, outings: 47, memories: 23, aiTokens: 18420 }
+      stats.value = { dau: 128, outingCount: 47, memoryCount: 23, aiTokenUsed: 18420 }
     }
   }
 
@@ -98,9 +98,9 @@ export const useAdminStore = defineStore('admin', () => {
     } catch {
       // mock fallback
       diceConfigs.value = [
-        { key: 'persuade_low',  label: '低社交能量 (0-30)',   content: '今天不太想动，随便去个地方吧。' },
-        { key: 'persuade_mid',  label: '中社交能量 (31-70)',  content: '找个有意思的地方，别太远。' },
-        { key: 'persuade_high', label: '高社交能量 (71-100)', content: '来吧！给我最惊喜的目的地！' },
+        { key: 'persuasion_default',  persuasionText: '来吧，今晚的剧本已经写好了，就差你这一笔。',  scene: 'default' },
+        { key: 'persuasion_wangjiawei',  persuasionText: '有些地方，一个人去太安静了，带上我，一起去热闹一下。',  scene: 'wangjiawei' },
+        { key: 'persuasion_npc',  persuasionText: '系统检测到今晚出门概率87.6%，建议立即执行。',  scene: 'npc' },
       ]
     }
   }

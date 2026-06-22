@@ -46,7 +46,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function fetchProfile() {
     try {
-      const res = await api.get('/auth/profile')
+      const res = await api.get('/users/me')
       user.value = res.data
     } catch {
       // token invalid — clear silently

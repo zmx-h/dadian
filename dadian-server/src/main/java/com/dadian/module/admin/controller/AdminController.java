@@ -3,6 +3,7 @@ package com.dadian.module.admin.controller;
 import com.dadian.common.ApiResponse;
 import com.dadian.module.admin.model.AdminStatsDTO;
 import com.dadian.module.admin.model.DiceConfigDTO;
+import com.dadian.module.admin.model.DiceConfigsSaveRequest;
 import com.dadian.module.admin.service.AdminService;
 import com.dadian.module.outing.model.Comment;
 import com.dadian.module.outing.model.Memory;
@@ -68,8 +69,8 @@ public class AdminController {
     }
 
     @PutMapping("/dice-configs")
-    public ApiResponse<?> updateDiceConfigs(@RequestBody List<DiceConfigDTO> configs, @AuthenticationPrincipal String userId) {
-        adminService.saveDiceConfigs(configs);
+    public ApiResponse<?> updateDiceConfigs(@RequestBody DiceConfigsSaveRequest body, @AuthenticationPrincipal String userId) {
+        adminService.saveDiceConfigs(body.getConfigs());
         return ApiResponse.ok();
     }
 }

@@ -133,6 +133,7 @@ public class MemoryService {
     public void delete(String memoryId, String userId) {
         Memory m = findById(memoryId);
         if (!m.getUserId().equals(userId)) throw new BusinessException(ErrorCode.FORBIDDEN, "无权操作");
+        memoryPhotoMapper.delete(new LambdaQueryWrapper<MemoryPhoto>().eq(MemoryPhoto::getMemoryId, memoryId));
         memoryMapper.deleteById(memoryId);
     }
 
@@ -173,7 +174,9 @@ public class MemoryService {
             new LambdaQueryWrapper<CommentCharge>().eq(CommentCharge::getCommentId, commentId)
                 .eq(CommentCharge::getUserId, userId));
         if (exists != null) {
-            commentChargeMapper.deleteById(exists);
+            commentChargeMapper.delete(
+                    new LambdaQueryWrapper<CommentCharge>().eq(CommentCharge::getCommentId, commentId)
+                            .eq(CommentCharge::getUserId, userId));
             return false;
         }
         CommentCharge cc = new CommentCharge();

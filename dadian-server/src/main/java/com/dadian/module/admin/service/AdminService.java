@@ -131,18 +131,18 @@ public class AdminService {
     private List<DiceConfigDTO> getDefaultDiceConfigs() {
         DiceConfigDTO c1 = new DiceConfigDTO();
         c1.setKey("persuasion_default");
-        c1.setPersuasionText("来吧，今晚的剧本已经写好了，就差你这一笔。");
-        c1.setScene("default");
+        c1.setLabel("默认社交能量");
+        c1.setContent("来吧，今晚的剧本已经写好了，就差你这一笔。");
 
         DiceConfigDTO c2 = new DiceConfigDTO();
         c2.setKey("persuasion_wangjiawei");
-        c2.setPersuasionText("有些地方，一个人去太安静了，带上我，一起去热闹一下。");
-        c2.setScene("wangjiawei");
+        c2.setLabel("王家卫风格");
+        c2.setContent("有些地方，一个人去太安静了，带上我，一起去热闹一下。");
 
         DiceConfigDTO c3 = new DiceConfigDTO();
         c3.setKey("persuasion_npc");
-        c3.setPersuasionText("系统检测到今晚出门概率87.6%，建议立即执行。");
-        c3.setScene("npc");
+        c3.setLabel("NPC风格");
+        c3.setContent("系统检测到今晚出门概率87.6%，建议立即执行。");
 
         return List.of(c1, c2, c3);
     }

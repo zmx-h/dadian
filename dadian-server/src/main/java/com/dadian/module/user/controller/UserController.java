@@ -45,7 +45,7 @@ public class UserController {
         return ApiResponse.ok(userService.toProfileDTO(user));
     }
 
-    @PutMapping("/me/privacy")
+    @PatchMapping("/me/privacy")
     public ApiResponse<UserProfileDTO> updatePrivacy(Authentication auth,
                                                       @RequestBody UserPrivacyDTO dto) {
         String userId = (String) auth.getPrincipal();

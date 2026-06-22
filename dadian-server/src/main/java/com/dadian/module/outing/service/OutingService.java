@@ -30,6 +30,8 @@ public class OutingService {
         outing.setStatus("draft");
         outing.setDestinationSpotId(req.getSpotId());
         outing.setTitle(spot != null ? "前往 " + spot.getName() : "未命名出行");
+        outing.setCreatedAt(OffsetDateTime.now());
+        outing.setUpdatedAt(OffsetDateTime.now());
         outingMapper.insert(outing);
 
         Participant participant = new Participant();
@@ -38,6 +40,7 @@ public class OutingService {
         participant.setUserId(creatorId);
         participant.setRole(req.getRole() != null ? req.getRole() : "agent");
         participant.setSocialEnergy(req.getEnergy() != null ? req.getEnergy() : 50);
+        participant.setCreatedAt(OffsetDateTime.now());
         participantMapper.insert(participant);
 
         if (spot != null && req.getLat() != null && req.getLng() != null) {
@@ -45,6 +48,7 @@ public class OutingService {
         route.setId(java.util.UUID.randomUUID().toString());
             route.setOutingId(outing.getId());
             route.setNeonColor("amber");
+            route.setCreatedAt(OffsetDateTime.now());
             routeMapper.insert(route);
 
             double midLat = (req.getLat() + spot.getLat()) / 2;
@@ -67,6 +71,7 @@ public class OutingService {
             throw new BusinessException(ErrorCode.BUSINESS_RULE_VIOLATION, "当前状态不允许开始出行");
         outing.setStatus("active");
         outing.setStartedAt(OffsetDateTime.now());
+        outing.setUpdatedAt(OffsetDateTime.now());
         outingMapper.updateById(outing);
         return outing;
     }
@@ -76,6 +81,7 @@ public class OutingService {
         if (!outing.getCreatorId().equals(userId)) throw new BusinessException(ErrorCode.FORBIDDEN, "无权操作");
         if (!"active".equals(outing.getStatus())) throw new BusinessException(ErrorCode.BUSINESS_RULE_VIOLATION, "当前状态不允许暂停");
         outing.setStatus("paused");
+        outing.setUpdatedAt(OffsetDateTime.now());
         outingMapper.updateById(outing);
     }
 
@@ -84,6 +90,7 @@ public class OutingService {
         if (!outing.getCreatorId().equals(userId)) throw new BusinessException(ErrorCode.FORBIDDEN, "无权操作");
         if (!"paused".equals(outing.getStatus())) throw new BusinessException(ErrorCode.BUSINESS_RULE_VIOLATION, "当前状态不允许恢复");
         outing.setStatus("active");
+        outing.setUpdatedAt(OffsetDateTime.now());
         outingMapper.updateById(outing);
     }
 
@@ -94,6 +101,7 @@ public class OutingService {
             throw new BusinessException(ErrorCode.BUSINESS_RULE_VIOLATION, "当前状态不允许完成");
         outing.setStatus("completed");
         outing.setEndedAt(OffsetDateTime.now());
+        outing.setUpdatedAt(OffsetDateTime.now());
         outingMapper.updateById(outing);
     }
 
@@ -102,6 +110,7 @@ public class OutingService {
         if (!outing.getCreatorId().equals(userId)) throw new BusinessException(ErrorCode.FORBIDDEN, "无权操作");
         if (!"draft".equals(outing.getStatus())) throw new BusinessException(ErrorCode.BUSINESS_RULE_VIOLATION, "只能取消草稿状态的出行");
         outing.setStatus("cancelled");
+        outing.setUpdatedAt(OffsetDateTime.now());
         outingMapper.updateById(outing);
     }
 
@@ -116,7 +125,7 @@ public class OutingService {
             .eq(Outing::getCreatorId, userId)
             .orderByDesc(Outing::getCreatedAt);
         if (status != null && !status.isBlank()) q.eq(Outing::getStatus, status);
-        if (cursor != null && !cursor.isBlank()) q.lt(Outing::getId, cursor);
+        if (cursor != null && !cursor.isBlank()) q.lt(Outing::getCreatedAt, OffsetDateTime.parse(cursor));
         q.last("LIMIT " + Math.min(limit, 50));
         return outingMapper.selectList(q);
     }

@@ -12,6 +12,7 @@ import com.dadian.module.user.mapper.UserMapper;
 import com.dadian.module.user.model.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,17 +57,16 @@ public class UserService {
 
     @Transactional
     public User create(String phone, String displayName) {
-        User existing = getByPhone(phone);
-        if (existing != null) {
-            throw new BusinessException(ErrorCode.PHONE_ALREADY_REGISTERED, "Phone already registered");
-        }
-
         User user = new User();
         user.setId(java.util.UUID.randomUUID().toString());
         user.setPhone(phone);
         user.setPhoneHash(DigestUtil.sha256Hex(phone));
         user.setDisplayName(displayName);
-        userMapper.insert(user);
+        try {
+            userMapper.insert(user);
+        } catch (DuplicateKeyException e) {
+            throw new BusinessException(ErrorCode.PHONE_ALREADY_REGISTERED, "Phone already registered");
+        }
         log.info("User created: id={}, phone={}", user.getId(), user.getPhone());
         return user;
     }

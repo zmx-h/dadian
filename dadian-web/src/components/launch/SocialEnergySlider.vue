@@ -10,9 +10,8 @@ const emit = defineEmits<{
   (e: 'update:modelValue', v: number): void
 }>()
 
-// Wrap in a reactive-like container so composable can read it
-const energyRef = computed(() => ({ value: props.modelValue }))
-const { color, label } = useSocialEnergy(energyRef.value)
+const energyRef = computed(() => props.modelValue)
+const { color, label } = useSocialEnergy(energyRef)
 
 function onInput(e: Event) {
   emit('update:modelValue', Number((e.target as HTMLInputElement).value))

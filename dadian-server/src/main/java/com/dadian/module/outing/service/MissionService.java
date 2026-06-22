@@ -9,6 +9,7 @@ import com.dadian.module.user.mapper.UserMapper;
 import com.dadian.module.user.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -61,10 +62,10 @@ public class MissionService {
         pm.setStatus("active");
         pm.setId(java.util.UUID.randomUUID().toString());
         pmMapper.insert(pm);
-        pm.setId(java.util.UUID.randomUUID().toString());
         return pm;
     }
 
+    @Transactional
     public void skip(String missionId, String participantId) {
         ParticipantMission pm = pmMapper.selectOne(new LambdaQueryWrapper<ParticipantMission>()
             .eq(ParticipantMission::getMissionId, missionId)
@@ -83,6 +84,7 @@ public class MissionService {
         }
     }
 
+    @Transactional
     public ParticipantMission complete(String missionId, String participantId, String proofPhotoUrl) {
         ParticipantMission pm = pmMapper.selectOne(new LambdaQueryWrapper<ParticipantMission>()
             .eq(ParticipantMission::getMissionId, missionId)

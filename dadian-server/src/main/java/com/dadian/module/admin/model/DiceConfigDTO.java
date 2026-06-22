@@ -5,6 +5,6 @@ import lombok.Data;
 @Data
 public class DiceConfigDTO {
     private String key;
-    private String persuasionText;
-    private String scene;
+    private String label;
+    private String content;
 }

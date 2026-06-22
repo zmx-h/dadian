@@ -1,6 +1,7 @@
 package com.dadian.module.user.controller;
 
 import com.dadian.common.ApiResponse;
+import com.dadian.common.ErrorCode;
 import com.dadian.module.user.service.AuthService;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ public class AuthController {
     public ApiResponse<?> sendCode(@RequestBody Map<String, String> body) {
         String phone = body.get("phone");
         if (phone == null || phone.isBlank()) {
-            return ApiResponse.fail(1002, "Phone is required");
+            return ApiResponse.fail(ErrorCode.VALIDATION_FAILED, "Phone is required");
         }
         authService.sendSmsCode(phone);
         return ApiResponse.ok();
@@ -30,7 +31,7 @@ public class AuthController {
         String phone = body.get("phone");
         String code = body.get("code");
         if (phone == null || phone.isBlank() || code == null || code.isBlank()) {
-            return ApiResponse.fail(1002, "Phone and code are required");
+            return ApiResponse.fail(ErrorCode.VALIDATION_FAILED, "Phone and code are required");
         }
         Map<String, Object> tokens = authService.verifyAndLogin(phone, code);
         return ApiResponse.ok(tokens);
@@ -40,7 +41,7 @@ public class AuthController {
     public ApiResponse<Map<String, Object>> refresh(@RequestBody Map<String, String> body) {
         String refreshToken = body.get("refreshToken");
         if (refreshToken == null || refreshToken.isBlank()) {
-            return ApiResponse.fail(1002, "refreshToken is required");
+            return ApiResponse.fail(ErrorCode.VALIDATION_FAILED, "refreshToken is required");
         }
         Map<String, Object> tokens = authService.refreshToken(refreshToken);
         return ApiResponse.ok(tokens);

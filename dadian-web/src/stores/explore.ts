@@ -36,44 +36,56 @@ export const useExploreStore = defineStore('explore', () => {
     if (data.code === 0) outing.value = data.data
     return data
   }
+  function requireOuting() { if (!outing.value?.id) throw new Error('No active outing') }
+
   async function startOuting() {
+    requireOuting()
     const { data } = await api.post(`/outings/${outing.value.id}/start`)
     if (data.code === 0) outing.value = data.data
     return data
   }
   async function pauseOuting() {
+    requireOuting()
     await api.post(`/outings/${outing.value.id}/pause`)
     isPaused.value = true
   }
   async function resumeOuting() {
+    requireOuting()
     await api.post(`/outings/${outing.value.id}/resume`)
     isPaused.value = false
   }
   async function completeOuting() {
+    requireOuting()
     await api.post(`/outings/${outing.value.id}/complete`)
     outing.value = null; missions.value = []; isTracking.value = false
   }
   async function fetchRoute() {
+    requireOuting()
     const { data } = await api.get(`/outings/${outing.value.id}/route`)
     if (data.code === 0) route.value = data.data
   }
   async function fetchMissions() {
+    requireOuting()
     const { data } = await api.get(`/outings/${outing.value.id}/missions`)
     if (data.code === 0) missions.value = data.data
   }
   async function acceptMission(id: string) {
+    requireOuting()
     await api.post(`/outings/${outing.value.id}/missions/${id}/accept`)
     await fetchMissions()
   }
   async function skipMission(id: string) {
+    requireOuting()
     await api.post(`/outings/${outing.value.id}/missions/${id}/skip`)
     await fetchMissions()
   }
   async function completeMission(id: string, photoUrl?: string) {
+    requireOuting()
     await api.post(`/outings/${outing.value.id}/missions/${id}/complete`, { proofPhotoUrl: photoUrl })
     await fetchMissions()
   }
   async function checkin(spotId: string, photoUrl?: string, comment?: string) {
+    requireOuting()
     const { data } = await api.post('/footprints', { outingId: outing.value.id, spotId, lat: 31.21, lng: 121.45, photoUrl, comment })
     return data
   }

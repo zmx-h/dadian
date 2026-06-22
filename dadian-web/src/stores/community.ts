@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import api from '@/api'
 
 export interface ResonantUser {
@@ -27,6 +27,21 @@ export interface InboxItem {
   mutualFollow: boolean
 }
 
+export interface FeedItem {
+  id: string
+  userId: string
+  title: string
+  style: string
+  photos: string[]
+  chargeCount: number
+  summary: string
+  visibility: string
+  collected: boolean
+  user: { id: string; displayName: string; avatarUrl: string }
+  createdAt: string
+  energy: number
+}
+
 export interface AlmanacEntry {
   rank: number
   userId: string
@@ -37,7 +52,7 @@ export interface AlmanacEntry {
 
 export const useCommunityStore = defineStore('community', () => {
   // ── Feed state ──────────────────────────────────────────────
-  const feed = ref<any[]>([])
+  const feed = ref<FeedItem[]>([])
   const feedPage = ref(1)
   const feedHasMore = ref(true)
   const feedLoading = ref(false)
@@ -47,7 +62,7 @@ export const useCommunityStore = defineStore('community', () => {
   const resonantSeed = ref(0)
 
   // ── Following ───────────────────────────────────────────────
-  const followingIds = ref<Set<string>>(new Set())
+  const followingIds = reactive<Record<string, boolean>>({})
 
   // ── Collections ─────────────────────────────────────────────
   const collectedIds = ref<Set<string>>(new Set())
@@ -62,8 +77,9 @@ export const useCommunityStore = defineStore('community', () => {
   const almanac = ref<Record<string, AlmanacEntry[]>>({})
 
   // ── Computed ────────────────────────────────────────────────
-  const isFollowing = (userId: string) => computed(() => followingIds.value.has(userId))
-  const isCollected = (memoryId: string) => computed(() => collectedIds.value.has(memoryId))
+  const isFollowingMap = computed(() => ({ ...followingIds }))
+  const isFollowing = (userId: string): boolean => !!followingIds[userId]
+  const isCollected = (memoryId: string): boolean => collectedIds.value.has(memoryId)
 
   // ── Feed actions ────────────────────────────────────────────
   async function fetchFeed(reset = false) {
@@ -99,7 +115,7 @@ export const useCommunityStore = defineStore('community', () => {
 
   async function collectMemory(memoryId: string) {
     try {
-      await api.post(`/community/memories/${memoryId}/collect`)
+      await api.post(`/outings/${memoryId}/collect`)
     } catch { /* stub */ }
     collectedIds.value.add(memoryId)
   }
@@ -107,7 +123,7 @@ export const useCommunityStore = defineStore('community', () => {
   // ── Resonant users ──────────────────────────────────────────
   async function fetchResonantUsers() {
     try {
-      const { data } = await api.get('/community/resonant-users', { params: { limit: 5, seed: resonantSeed.value } })
+      const { data } = await api.get('/community/discover', { params: { limit: 5, seed: resonantSeed.value } })
       if (data.code === 0 && data.data?.length) {
         resonantUsers.value = data.data
         return
@@ -123,19 +139,19 @@ export const useCommunityStore = defineStore('community', () => {
 
   // ── Follow ──────────────────────────────────────────────────
   async function follow(userId: string) {
-    try { await api.post(`/community/follow/${userId}`) } catch { /* stub */ }
-    followingIds.value.add(userId)
+    try { await api.post('/follows', { followedId: userId }) } catch { /* stub */ }
+    followingIds[userId] = true
   }
 
   async function unfollow(userId: string) {
-    try { await api.delete(`/community/follow/${userId}`) } catch { /* stub */ }
-    followingIds.value.delete(userId)
+    try { await api.delete(`/follows/${userId}`) } catch { /* stub */ }
+    delete followingIds[userId]
   }
 
   // ── Messages ────────────────────────────────────────────────
   async function fetchInbox() {
     try {
-      const { data } = await api.get('/community/inbox')
+      const { data } = await api.get('/messages/inbox')
       if (data.code === 0) { inbox.value = data.data; return }
     } catch { /* fall through to mock */ }
     inbox.value = generateMockInbox()
@@ -143,7 +159,7 @@ export const useCommunityStore = defineStore('community', () => {
 
   async function fetchConversation(userId: string) {
     try {
-      const { data } = await api.get(`/community/conversations/${userId}`)
+      const { data } = await api.get(`/messages/conversation/${userId}`)
       if (data.code === 0) { messages.value = data.data.messages || []; return }
     } catch { /* fall through to mock */ }
     // mock messages
@@ -168,7 +184,7 @@ export const useCommunityStore = defineStore('community', () => {
     const tempId = 'temp_' + Date.now()
     messages.value.push({ id: tempId, senderId: 'me', content, createdAt: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) })
     try {
-      await api.post(`/community/conversations/${userId}/messages`, { content })
+      await api.post('/messages', { receiverId: userId, content })
     } catch { /* stub — message kept locally */ }
   }
 
@@ -180,7 +196,7 @@ export const useCommunityStore = defineStore('community', () => {
   // ── Almanac ─────────────────────────────────────────────────
   async function fetchAlmanac(type: string, limit = 5) {
     try {
-      const { data } = await api.get('/community/almanac', { params: { type, limit } })
+      const { data } = await api.get('/almanac/leaderboard', { params: { type, limit } })
       if (data.code === 0) {
         almanac.value[type] = data.data
         return data.data
@@ -260,7 +276,7 @@ export const useCommunityStore = defineStore('community', () => {
     followingIds, collectedIds,
     inbox, currentConversation, messages, unreadMessages,
     almanac,
-    isFollowing, isCollected,
+    isFollowing, isFollowingMap, isCollected,
     fetchFeed, loadMore, collectMemory,
     fetchResonantUsers, refreshResonantUsers,
     follow, unfollow,
