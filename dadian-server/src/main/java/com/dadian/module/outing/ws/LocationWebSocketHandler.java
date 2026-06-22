@@ -41,6 +41,10 @@ public class LocationWebSocketHandler extends TextWebSocketHandler {
         }
         sessionUser.put(session.getId(), userId);
         outingSessions.computeIfAbsent(outingId, k -> ConcurrentHashMap.newKeySet()).add(session);
+
+        // Broadcast teammate_joined to all other sessions in this outing
+        sendTeamEvent(outingId, "teammate_joined", userId, session.getId());
+
         log.debug("WS connected: user={} outing={}", userId, outingId);
     }
 
@@ -55,9 +59,26 @@ public class LocationWebSocketHandler extends TextWebSocketHandler {
             payload = objectMapper.readValue(message.getPayload(), Map.class);
         } catch (Exception e) { return; }
 
+        String type = (String) payload.getOrDefault("type", "location_update");
         payload.put("userId", userId);
-        String broadcast = objectMapper.writeValueAsString(payload);
 
+        // Handle team_status request: broadcast full teammate list
+        if ("team_status".equals(type)) {
+            payload.put("timestamp", System.currentTimeMillis());
+            String broadcast = objectMapper.writeValueAsString(payload);
+            Set<WebSocketSession> sessions = outingSessions.get(outingId);
+            if (sessions != null) {
+                for (WebSocketSession s : sessions) {
+                    if (s.isOpen()) {
+                        s.sendMessage(new TextMessage(broadcast));
+                    }
+                }
+            }
+            return;
+        }
+
+        // Default: relay message to all other sessions in the outing
+        String broadcast = objectMapper.writeValueAsString(payload);
         Set<WebSocketSession> sessions = outingSessions.get(outingId);
         if (sessions != null) {
             for (WebSocketSession s : sessions) {
@@ -78,8 +99,65 @@ public class LocationWebSocketHandler extends TextWebSocketHandler {
                 sessions.remove(session);
                 if (sessions.isEmpty()) outingSessions.remove(outingId);
             }
+
+            // Broadcast teammate_left to remaining sessions
+            if (userId != null) {
+                sendTeamEvent(outingId, "teammate_left", userId, null);
+            }
         }
         log.debug("WS disconnected: user={} outing={}", userId, outingId);
+    }
+
+    /**
+     * Check if a user is currently connected (online) in a given outing.
+     */
+    public boolean isUserOnline(String outingId, String userId) {
+        Set<WebSocketSession> sessions = outingSessions.get(outingId);
+        if (sessions == null) return false;
+        for (WebSocketSession s : sessions) {
+            if (s.isOpen() && userId.equals(sessionUser.get(s.getId()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Get the set of online user IDs for a given outing.
+     */
+    public Set<String> getOnlineUsers(String outingId) {
+        Set<String> online = new HashSet<>();
+        Set<WebSocketSession> sessions = outingSessions.get(outingId);
+        if (sessions != null) {
+            for (WebSocketSession s : sessions) {
+                if (s.isOpen()) {
+                    String uid = sessionUser.get(s.getId());
+                    if (uid != null) online.add(uid);
+                }
+            }
+        }
+        return online;
+    }
+
+    private void sendTeamEvent(String outingId, String eventType, String userId, String excludeSessionId) {
+        Set<WebSocketSession> sessions = outingSessions.get(outingId);
+        if (sessions == null) return;
+
+        Map<String, Object> event = new LinkedHashMap<>();
+        event.put("type", eventType);
+        event.put("userId", userId);
+        event.put("timestamp", System.currentTimeMillis());
+
+        try {
+            String json = objectMapper.writeValueAsString(event);
+            for (WebSocketSession s : sessions) {
+                if (s.isOpen() && !s.getId().equals(excludeSessionId)) {
+                    s.sendMessage(new TextMessage(json));
+                }
+            }
+        } catch (IOException e) {
+            log.warn("Failed to send team event {} for outing {}", eventType, outingId, e);
+        }
     }
 
     private String extractToken(WebSocketSession session) {

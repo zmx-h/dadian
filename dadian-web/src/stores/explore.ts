@@ -15,11 +15,22 @@ export interface Mission {
 }
 export interface Teammate { id: string; userId: string; displayName: string; role: string; socialEnergy: number }
 
+export interface Invitation {
+  id: string
+  outingId: string
+  inviterId: string
+  inviterName: string
+  outingTitle: string
+  status: string
+  createdAt: string
+}
+
 export const useExploreStore = defineStore('explore', () => {
   const outing = ref<any>(null)
   const route = ref<any>(null)
   const missions = ref<Mission[]>([])
   const teammates = ref<Teammate[]>([])
+  const pendingInvitations = ref<Invitation[]>([])
   const currentLocation = ref<{lat:number;lng:number}|null>(null)
   const isTracking = ref(false)
   const isPaused = ref(false)
@@ -30,6 +41,9 @@ export const useExploreStore = defineStore('explore', () => {
     if (!missions.value.length) return 0
     return Math.round((completedMissions.value.length / missions.value.length) * 100)
   })
+
+  const isTeammate = computed(() => (userId: string) => teammates.value.some(t => t.userId === userId))
+  const teamSize = computed(() => teammates.value.length)
 
   async function createOuting(spotId: string) {
     const { data } = await api.post('/outings', { spotId, lat: 31.21, lng: 121.45, energy: 50, role: 'agent' })
@@ -89,13 +103,39 @@ export const useExploreStore = defineStore('explore', () => {
     const { data } = await api.post('/footprints', { outingId: outing.value.id, spotId, lat: 31.21, lng: 121.45, photoUrl, comment })
     return data
   }
+  async function inviteTeammate(userId: string) {
+    requireOuting()
+    const { data } = await api.post(`/outings/${outing.value.id}/invite`, { userId })
+    return data
+  }
+  async function respondToInvitation(invitationId: string, accept: boolean) {
+    const { data } = await api.post(`/outings/${outing.value.id}/invitations/respond`, { invitationId, accept })
+    if (data.code === 0 && accept) await fetchTeammates()
+    pendingInvitations.value = pendingInvitations.value.filter(i => i.id !== invitationId)
+    return data
+  }
+  async function fetchTeammates() {
+    requireOuting()
+    const { data } = await api.get(`/outings/${outing.value.id}/teammates`)
+    if (data.code === 0) teammates.value = data.data
+  }
+  async function leaveOuting() {
+    requireOuting()
+    await api.post(`/outings/${outing.value.id}/leave`)
+    teammates.value = []
+  }
+  async function fetchPendingInvitations() {
+    const { data } = await api.get('/users/me/invitations')
+    if (data.code === 0) pendingInvitations.value = data.data
+  }
   function updateLocation(lat: number, lng: number) { currentLocation.value = { lat, lng } }
 
   return {
-    outing, route, missions, teammates, currentLocation, isTracking, isPaused,
-    completedMissions, availableMissions, progressPercent,
+    outing, route, missions, teammates, pendingInvitations, currentLocation, isTracking, isPaused,
+    completedMissions, availableMissions, progressPercent, isTeammate, teamSize,
     createOuting, startOuting, pauseOuting, resumeOuting, completeOuting,
     fetchRoute, fetchMissions, acceptMission, skipMission, completeMission,
     checkin, updateLocation,
+    inviteTeammate, respondToInvitation, fetchTeammates, leaveOuting, fetchPendingInvitations,
   }
 })

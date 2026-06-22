@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import type { Mission } from '@/stores/explore'
-import { Pause, Play, Camera, RefreshCw } from '@lucide/vue'
+import { Pause, Play, Camera, RefreshCw, Users, Radio } from '@lucide/vue'
 
-defineProps<{ missions: Mission[]; isPaused: boolean }>()
-const emit = defineEmits<{ pause: []; resume: []; complete: []; checkin: []; transfer: [] }>()
+const props = defineProps<{ missions: Mission[]; isPaused: boolean; teammateCount?: number; isRemote?: boolean }>()
+const emit = defineEmits<{ pause: []; resume: []; complete: []; checkin: []; transfer: []; toggleTeammates: [] }>()
 
 const elapsed = ref(0)
 let timer: ReturnType<typeof setInterval> | null = null
@@ -33,6 +33,15 @@ function fmt(t:number) {
       </button>
     </div>
     <div class="flex items-center gap-4 text-xs text-stone-500">
+      <button
+        v-if="teammateCount || isRemote"
+        class="flex items-center gap-1 text-xs hover:text-stone-300 transition-colors"
+        @click="emit('toggleTeammates')"
+      >
+        <component :is="isRemote ? Radio : Users" :size="14" :class="isRemote ? 'text-violet-400' : 'text-amber-400'" />
+        <span v-if="isRemote" class="text-violet-400">远程</span>
+        <span v-else>{{ teammateCount }}人</span>
+      </button>
       <span>{{ fmt(elapsed) }}</span>
       <span>{{ missions.filter(m => m.participantStatus === 'completed').length }}/{{ missions.length }} 任务</span>
       <button class="text-red-400/60 hover:text-red-400 text-[10px]" @click="emit('complete')">结束出行</button>
