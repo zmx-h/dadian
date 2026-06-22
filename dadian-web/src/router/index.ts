@@ -49,6 +49,12 @@ const router = createRouter({
       component: () => import('@/views/ProfileView.vue'),
       meta: { shell: 'standard' },
     },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('@/views/AdminView.vue'),
+      meta: { shell: 'standard' },
+    },
   ],
 })
 

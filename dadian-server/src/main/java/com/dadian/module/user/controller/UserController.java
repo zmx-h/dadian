@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -55,21 +54,35 @@ public class UserController {
     }
 
     @GetMapping("/me/achievements")
-    public ApiResponse<List<Object>> getAchievements() {
-        return ApiResponse.ok(Collections.emptyList());
+    public ApiResponse<List<AchievementDTO>> getAchievements(Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        List<AchievementDTO> achievements = userService.getAchievements(userId);
+        return ApiResponse.ok(achievements);
+    }
+
+    @GetMapping("/me/stats")
+    public ApiResponse<UserStatsDTO> getStats(Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        UserStatsDTO stats = userService.getStats(userId);
+        return ApiResponse.ok(stats);
     }
 
     @PostMapping("/me/export")
     public ApiResponse<?> exportData(Authentication auth) {
         String userId = (String) auth.getPrincipal();
-        return ApiResponse.ok(Map.of(
-                "message", "Data export initiated. A download link will be sent to your registered phone.",
-                "requestId", java.util.UUID.randomUUID().toString()
-        ));
+        Map<String, Object> result = userService.exportData(userId);
+        return ApiResponse.ok(result);
     }
 
     @DeleteMapping("/me")
-    public ApiResponse<?> deleteAccount(Authentication auth) {
+    public ApiResponse<?> deleteAccount(Authentication auth,
+                                         @RequestParam(defaultValue = "false") boolean confirm) {
+        if (!confirm) {
+            return ApiResponse.ok(Map.of(
+                    "message", "请将 query param confirm=true 作为确认",
+                    "hint", "删除后所有数据将被标记删除，30天内可联系客服恢复"
+            ));
+        }
         String userId = (String) auth.getPrincipal();
         userService.softDelete(userId);
         return ApiResponse.ok();
