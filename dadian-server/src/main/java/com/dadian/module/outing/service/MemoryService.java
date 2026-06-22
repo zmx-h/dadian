@@ -192,4 +192,31 @@ public class MemoryService {
         r.setStartedAt(o.getStartedAt()); r.setEndedAt(o.getEndedAt());
         return r;
     }
+
+    // ─── Collect & Replay ───
+
+    @Transactional
+    public Memory collectOuting(String outingId, String userId) {
+        Outing outing = outingMapper.selectById(outingId);
+        if (outing == null) throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "出行不存在");
+
+        Memory memory = new Memory();
+        memory.setOutingId(outingId);
+        memory.setUserId(userId);
+        memory.setTitle((outing.getTitle() != null ? outing.getTitle() : "未命名出行") + " · 剧本");
+        memory.setStyle("wangjiawei");
+        memory.setSummary("收藏的剧本，随时可以重放。");
+        memory.setVisibility("private");
+        memory.setIsSynthetic(true);
+        memory.setGeneratedAt(OffsetDateTime.now());
+        memoryMapper.insert(memory);
+        return memory;
+    }
+
+    public List<Memory> listCollectedScripts(String userId) {
+        return memoryMapper.selectList(new LambdaQueryWrapper<Memory>()
+                .eq(Memory::getUserId, userId)
+                .eq(Memory::getIsSynthetic, true)
+                .orderByDesc(Memory::getGeneratedAt));
+    }
 }

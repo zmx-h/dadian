@@ -76,4 +76,17 @@ public class MemoryController {
         boolean charged = memoryService.toggleCharge(id, userId);
         return ApiResponse.ok(Map.of("charged", charged));
     }
+
+    // ─── Collect & Replay ───
+
+    @PostMapping("/outings/{id}/collect")
+    public ApiResponse<Memory> collectOuting(@PathVariable String id,
+                                              @AuthenticationPrincipal String userId) {
+        return ApiResponse.ok(memoryService.collectOuting(id, userId));
+    }
+
+    @GetMapping("/users/me/scripts")
+    public ApiResponse<List<Memory>> listScripts(@AuthenticationPrincipal String userId) {
+        return ApiResponse.ok(memoryService.listCollectedScripts(userId));
+    }
 }
